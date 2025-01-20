@@ -5,16 +5,15 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/bartholomeas/hwheels_api/internal/users/router"
+	"github.com/bartholomeas/hwheels_api/config/initializers"
+	"github.com/bartholomeas/hwheels_api/internal/auth/router"
 	"github.com/gin-gonic/gin"
-	"github.com/joho/godotenv"
 )
 
 func main() {
-	err := godotenv.Load()
-	if err != nil {
-		panic("Error loading .env file")
-	}
+
+	initializers.LoadEnv()
+	initializers.ConnectDB()
 
 	api := gin.Default()
 	v1 := api.Group("/api/v1")
@@ -23,7 +22,7 @@ func main() {
 		c.JSON(http.StatusOK, gin.H{"message": "API v1 is running"})
 	})
 
-	router.InitUsersRouter(v1)
+	router.InitAuthRouter(v1)
 
 	port := os.Getenv("PORT")
 	api.Run(":" + port)
