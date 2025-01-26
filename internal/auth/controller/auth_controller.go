@@ -9,7 +9,7 @@ import (
 )
 
 func CreateUser(c *gin.Context) {
-	var authRequest requests.AuthInputRequest
+	var authRequest requests.CreateUserRequest
 
 	if err := c.ShouldBindJSON(&authRequest); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -34,5 +34,17 @@ func CreateUser(c *gin.Context) {
 }
 
 func LoginUser(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{"message": "User logged in"})
+	var loginRequest requests.LoginRequest
+
+	if err := c.ShouldBindJSON(&loginRequest); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	token, err := services.LoginUser(loginRequest)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "User logged in", "accessToken": token})
 }
