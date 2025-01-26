@@ -42,7 +42,7 @@ func CreateUser(request requests.CreateUserRequest) (*authEntities.User, error) 
 		}
 
 		fmt.Println("JUZERRR:: ", user.ID)
-		profile := userEntities.Profile{
+		profile := userEntities.UserProfile{
 			UserID: user.ID,
 		}
 
