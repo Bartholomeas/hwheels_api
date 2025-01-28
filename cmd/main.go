@@ -6,7 +6,8 @@ import (
 	"os"
 
 	"github.com/bartholomeas/hwheels_api/config/initializers"
-	"github.com/bartholomeas/hwheels_api/internal/auth/router"
+	authRouter "github.com/bartholomeas/hwheels_api/internal/auth/router"
+	userRouter "github.com/bartholomeas/hwheels_api/internal/user/router"
 	"github.com/gin-gonic/gin"
 )
 
@@ -22,7 +23,8 @@ func main() {
 		c.JSON(http.StatusOK, gin.H{"message": "API v1 is running"})
 	})
 
-	router.InitAuthRouter(v1)
+	authRouter.InitAuthRouter(v1)
+	userRouter.InitUserRouter(v1)
 
 	port := os.Getenv("PORT")
 	api.Run(":" + port)

@@ -1,15 +1,17 @@
 services:
-  hwheels-db:
-    image: postgres:latest
+  postgres:
     container_name: hwheels-db
+    image: postgres:latest
+    env_file:
+      - .env
     environment:
       POSTGRES_DB: ${DB_NAME}
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
     ports:
-      - 5432:5432
+      - '${DB_PORT}:5432'
     volumes:
-      - ./data:/var/lib/postgresql/data
+      - hwheels_api_data:/var/lib/postgresql/data
 
 volumes:
-  data:
+  hwheels_api_data:
