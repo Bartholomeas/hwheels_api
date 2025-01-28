@@ -6,23 +6,34 @@ import (
 	"github.com/bartholomeas/hwheels_api/internal/auth/requests"
 	"github.com/bartholomeas/hwheels_api/internal/auth/services"
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
-func CreateUser(c *gin.Context) {
+type AuthController struct {
+	authService *services.AuthService
+}
+
+func NewAuthController(db *gorm.DB) *AuthController {
+	return &AuthController{
+		authService: services.NewAuthService(db),
+	}
+}
+
+func (c *AuthController) CreateUser(ctx *gin.Context) {
 	var authRequest requests.CreateUserRequest
 
-	if err := c.ShouldBindJSON(&authRequest); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	if err := ctx.ShouldBindJSON(&authRequest); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	user, err := services.CreateUser(authRequest)
+	user, err := c.authService.CreateUser(authRequest)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{
+	ctx.JSON(http.StatusCreated, gin.H{
 		"message": "User created successfully",
 		"data": gin.H{
 			"id":       user.ID,
@@ -33,18 +44,18 @@ func CreateUser(c *gin.Context) {
 	})
 }
 
-func LoginUser(c *gin.Context) {
+func (c *AuthController) LoginUser(ctx *gin.Context) {
 	var loginRequest requests.LoginRequest
 
-	if err := c.ShouldBindJSON(&loginRequest); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	if err := ctx.ShouldBindJSON(&loginRequest); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	token, err := services.LoginUser(loginRequest)
+	token, err := c.authService.LoginUser(loginRequest)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "User logged in", "accessToken": token})
+	ctx.JSON(http.StatusOK, gin.H{"message": "User logged in", "accessToken": token})
 }
