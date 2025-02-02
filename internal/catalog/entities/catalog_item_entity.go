@@ -19,4 +19,6 @@ type CatalogItem struct {
 	Rarity      models.CatalogItemRarity `json:"rarity"`
 	IsChase     bool                     `json:"is_chase" gorm:"default:false"`
 	PhotoUrl    string                   `json:"photo_url"`
+	Categories  []*CatalogCategory       `json:"categories" gorm:"many2many:categories"`
+	Details     *CatalogItemDetails      `json:"details" gorm:"foreignKey:CatalogItemID;constraint:OnDelete:CASCADE"`
 }

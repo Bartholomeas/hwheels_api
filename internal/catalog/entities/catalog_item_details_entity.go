@@ -4,6 +4,7 @@ import commonEntities "github.com/bartholomeas/hwheels_api/internal/common/entit
 
 type CatalogItemDetails struct {
 	commonEntities.Base
-	Description   string `json:"description"`
-	CatalogItemID string `json:"catalog_item_id" gorm:"type:uuid;not null;unique"`
+	Description   string       `json:"description"`
+	CatalogItemID string       `json:"catalog_item_id" gorm:"type:uuid;not null;unique"`
+	CatalogItem   *CatalogItem `json:"catalog_item" gorm:"type:uuid;not null;unique"`
 }
