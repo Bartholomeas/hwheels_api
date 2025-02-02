@@ -1,6 +1,7 @@
 .env*
 
 data
+csv/*
 
 tmp/
 tmp/*
