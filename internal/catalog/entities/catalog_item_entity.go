@@ -14,11 +14,14 @@ type CatalogItem struct {
 	ReleaseDate time.Time                `json:"release_date"`
 	RetailPrice float64                  `json:"retail_price"`
 	MarketValue float64                  `json:"market_value"`
-	Series      string                   `json:"series"`
 	Year        uint                     `json:"year"`
 	Rarity      models.CatalogItemRarity `json:"rarity"`
 	IsChase     bool                     `json:"is_chase" gorm:"default:false"`
 	PhotoUrl    string                   `json:"photo_url"`
-	Categories  []*CatalogCategory       `json:"categories" gorm:"many2many:categories"`
+	Categories  []*CatalogCategory       `json:"categories" gorm:"many2many:catalog_item_categories;"`
 	Details     *CatalogItemDetails      `json:"details" gorm:"foreignKey:CatalogItemID;constraint:OnDelete:CASCADE"`
+}
+
+func (CatalogItem) TableName() string {
+	return "catalog_items"
 }

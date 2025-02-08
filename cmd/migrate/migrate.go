@@ -27,10 +27,6 @@ func main() {
 		log.Fatal("Error dropping tables:", err)
 	}
 
-	// if err := initializers.DB.Exec("CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\";").Error; err != nil {
-	// 	log.Fatal("Error creating UUID extension:", err)
-	// }
-
 	if err := initializers.DB.AutoMigrate(
 		&authEntities.User{},
 		&userEntities.UserProfile{},
