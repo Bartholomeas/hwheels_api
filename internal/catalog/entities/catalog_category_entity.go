@@ -7,7 +7,7 @@ type CatalogCategory struct {
 	Name        string         `json:"name" gorm:"not null"`
 	Slug        string         `json:"slug" gorm:"not null"`
 	Description string         `json:"description"`
-	Items       []*CatalogItem `json:"items" gorm:"many2many:catalog_item_categories;"`
+	Items       []*CatalogItem `json:"items" gorm:"many2many:catalog_item_categories;constraint:OnDelete:CASCADE"`
 }
 
 func (CatalogCategory) TableName() string {

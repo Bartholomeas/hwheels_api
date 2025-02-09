@@ -18,8 +18,8 @@ type CatalogItem struct {
 	Rarity      models.CatalogItemRarity `json:"rarity"`
 	IsChase     bool                     `json:"is_chase" gorm:"default:false"`
 	PhotoUrl    string                   `json:"photo_url"`
-	Categories  []*CatalogCategory       `json:"categories" gorm:"many2many:catalog_item_categories;"`
-	Details     *CatalogItemDetails      `json:"details" gorm:"foreignKey:CatalogItemID;constraint:OnDelete:CASCADE"`
+	Categories  []*CatalogCategory       `json:"categories,omitempty" gorm:"many2many:catalog_item_categories;constraint:OnDelete:CASCADE"`
+	Details     *CatalogItemDetails      `json:"details,omitempty" gorm:"foreignKey:CatalogItemID;constraint:OnDelete:CASCADE"`
 }
 
 func (CatalogItem) TableName() string {

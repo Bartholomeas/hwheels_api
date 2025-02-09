@@ -18,11 +18,12 @@ func main() {
 	log.Println("Starting migrations...")
 
 	if err := initializers.DB.Migrator().DropTable(
-		&authEntities.User{},
-		&userEntities.UserProfile{},
-		&catalogEntities.CatalogCategory{},
-		&catalogEntities.CatalogItem{},
+		"catalog_item_categories",
 		&catalogEntities.CatalogItemDetails{},
+		&catalogEntities.CatalogItem{},
+		&catalogEntities.CatalogCategory{},
+		&userEntities.UserProfile{},
+		&authEntities.User{},
 	); err != nil {
 		log.Fatal("Error dropping tables:", err)
 	}

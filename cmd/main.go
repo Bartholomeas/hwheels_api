@@ -7,6 +7,7 @@ import (
 
 	"github.com/bartholomeas/hwheels_api/config/initializers"
 	authRouter "github.com/bartholomeas/hwheels_api/internal/auth/router"
+	catalogRouter "github.com/bartholomeas/hwheels_api/internal/catalog/router"
 	userRouter "github.com/bartholomeas/hwheels_api/internal/user/router"
 	"github.com/gin-gonic/gin"
 )
@@ -25,6 +26,7 @@ func main() {
 
 	authRouter.InitAuthRouter(v1)
 	userRouter.InitUserRouter(v1)
+	catalogRouter.InitCatalogRouter(v1)
 
 	port := os.Getenv("PORT")
 	api.Run(":" + port)

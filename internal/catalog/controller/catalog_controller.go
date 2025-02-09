@@ -1,6 +1,8 @@
 package controllers
 
 import (
+	"net/http"
+
 	"github.com/bartholomeas/hwheels_api/internal/catalog/services"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -16,4 +18,12 @@ func NewCatalogController(db *gorm.DB) *CatalogController {
 	}
 }
 
-func (c *CatalogController) FindAllItems(ctx *gin.Context) {}
+func (c *CatalogController) FindAllItems(ctx *gin.Context) {
+	items, err := c.catalogService.FindAllItems()
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, items)
+}
