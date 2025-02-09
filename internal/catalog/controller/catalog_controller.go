@@ -3,6 +3,7 @@ package controllers
 import (
 	"net/http"
 
+	"github.com/bartholomeas/hwheels_api/internal/catalog/repositories"
 	"github.com/bartholomeas/hwheels_api/internal/catalog/services"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -13,13 +14,16 @@ type CatalogController struct {
 }
 
 func NewCatalogController(db *gorm.DB) *CatalogController {
+	repo := repositories.NewCatalogRepository(db)
+	service := services.NewCatalogService(repo)
+
 	return &CatalogController{
-		catalogService: services.NewCatalogService(db),
+		catalogService: service,
 	}
 }
 
 func (c *CatalogController) FindAllItems(ctx *gin.Context) {
-	items, err := c.catalogService.FindAllItems()
+	items, err := c.catalogService.FindAll()
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
