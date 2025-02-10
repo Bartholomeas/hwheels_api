@@ -23,7 +23,7 @@ func NewCatalogController(db *gorm.DB) *CatalogController {
 }
 
 func (c *CatalogController) FindAllItems(ctx *gin.Context) {
-	items, err := c.catalogService.FindAll()
+	items, err := c.catalogService.FindAll(10, 0)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
