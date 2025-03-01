@@ -16,7 +16,7 @@ func ConnectDB() {
 	log.Printf("Connecting to database with: %s", connString)
 
 	config := &gorm.Config{
-		Logger: logger.Default.LogMode(logger.Info), // Add this for SQL logging
+		Logger: logger.Default.LogMode(logger.Info),
 	}
 
 	var err error
