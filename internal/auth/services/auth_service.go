@@ -1,6 +1,7 @@
 package services
 
 import (
+	"context"
 	"errors"
 	"os"
 	"time"
@@ -11,14 +12,17 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
+
+	cognito "github.com/bartholomeas/hwheels_api/internal/aws/cognito"
 )
 
 type AuthService struct {
-	db *gorm.DB
+	db            *gorm.DB
+	cognitoClient cognito.CognitoInterface
 }
 
 func NewAuthService(db *gorm.DB) *AuthService {
-	return &AuthService{db: db}
+	return &AuthService{db: db, cognitoClient: cognito.NewCognitoService()}
 }
 
 func (s *AuthService) CreateUser(request requests.CreateUserRequest) (*authEntities.User, error) {
@@ -30,6 +34,8 @@ func (s *AuthService) CreateUser(request requests.CreateUserRequest) (*authEntit
 	if err != nil {
 		return nil, err
 	}
+
+	s.cognitoClient.CognitoSignUp(context.Background(), os.Getenv("COGNITO_CLIENT_ID"), request.Username, request.Password, request.Email)
 
 	user := &authEntities.User{
 		Username: request.Username,
