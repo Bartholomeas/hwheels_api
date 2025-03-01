@@ -11,17 +11,18 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
-	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
+	cognito "github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
 )
 
 type CognitoInterface interface {
 	SignUpCognito(ctx context.Context, username string, password string, email string) (bool, error)
 	SignInCognito(ctx context.Context, username string, password string) (*types.AuthenticationResultType, error)
+	GetUserByToken(token string) (*cognito.GetUserOutput, error)
 }
 
 type CognitoService struct {
-	CognitoClient *cognitoidentityprovider.Client
+	cognitoClient *cognito.Client
 	clientId      string
 	clientSecret  string
 }
@@ -34,10 +35,10 @@ func NewCognitoService() *CognitoService {
 		log.Fatal(err)
 	}
 
-	cognitoClient := cognitoidentityprovider.NewFromConfig(sdkConfig)
+	cognitoClient := cognito.NewFromConfig(sdkConfig)
 
 	return &CognitoService{
-		CognitoClient: cognitoClient,
+		cognitoClient: cognitoClient,
 		clientId:      os.Getenv("COGNITO_CLIENT_ID"),
 		clientSecret:  os.Getenv("COGNITO_CLIENT_SECRET"),
 	}
@@ -49,17 +50,17 @@ func calculateSecretHash(username, clientId, clientSecret string) string {
 	return base64.StdEncoding.EncodeToString(mac.Sum(nil))
 }
 
-func (actor CognitoService) SignUpCognito(ctx context.Context, username string, password string, email string) (bool, error) {
+func (c CognitoService) SignUpCognito(ctx context.Context, username string, password string, email string) (bool, error) {
 	confirmed := false
 
 	secretHash := calculateSecretHash(
 		email,
-		actor.clientId,
-		actor.clientSecret,
+		c.clientId,
+		c.clientSecret,
 	)
 
-	output, err := actor.CognitoClient.SignUp(ctx, &cognitoidentityprovider.SignUpInput{
-		ClientId:   aws.String(actor.clientId),
+	output, err := c.cognitoClient.SignUp(ctx, &cognito.SignUpInput{
+		ClientId:   aws.String(c.clientId),
 		Password:   aws.String(password),
 		Username:   aws.String(email),
 		SecretHash: aws.String(secretHash),
@@ -89,18 +90,18 @@ func (actor CognitoService) SignUpCognito(ctx context.Context, username string, 
 	return confirmed, nil
 }
 
-func (actor CognitoService) SignInCognito(ctx context.Context, username string, password string) (*types.AuthenticationResultType, error) {
+func (c CognitoService) SignInCognito(ctx context.Context, username string, password string) (*types.AuthenticationResultType, error) {
 	var authResult *types.AuthenticationResultType
 
 	secretHash := calculateSecretHash(
 		username,
-		actor.clientId,
-		actor.clientSecret,
+		c.clientId,
+		c.clientSecret,
 	)
 
-	result, err := actor.CognitoClient.InitiateAuth(ctx, &cognitoidentityprovider.InitiateAuthInput{
+	result, err := c.cognitoClient.InitiateAuth(ctx, &cognito.InitiateAuthInput{
 		AuthFlow:       "USER_PASSWORD_AUTH",
-		ClientId:       aws.String(actor.clientId),
+		ClientId:       aws.String(c.clientId),
 		AuthParameters: map[string]string{"USERNAME": username, "PASSWORD": password, "SECRET_HASH": secretHash},
 	})
 
@@ -116,4 +117,17 @@ func (actor CognitoService) SignInCognito(ctx context.Context, username string, 
 	}
 
 	return authResult, err
+}
+
+func (c CognitoService) GetUserByToken(token string) (*cognito.GetUserOutput, error) {
+	input := &cognito.GetUserInput{
+		AccessToken: aws.String(token),
+	}
+
+	result, err := c.cognitoClient.GetUser(context.Background(), input)
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
 }
