@@ -18,7 +18,7 @@ import (
 )
 
 type CognitoInterface interface {
-	SignUpCognito(ctx context.Context, username string, password string, email string) (*string, error)
+	SignUpCognito(ctx context.Context, username string, password string, email string) (*string, *appErrors.AppError)
 	SignInCognito(ctx context.Context, username string, password string) (*types.AuthenticationResultType, *appErrors.AppError)
 	GetUserByToken(token string) (*cognito.GetUserOutput, *appErrors.AppError)
 }
@@ -46,7 +46,7 @@ func NewCognitoService() *CognitoService {
 	}
 }
 
-func (c CognitoService) SignUpCognito(ctx context.Context, username string, password string, email string) (*string, error) {
+func (c CognitoService) SignUpCognito(ctx context.Context, username string, password string, email string) (*string, *appErrors.AppError) {
 	secretHash := calculateSecretHash(
 		email,
 		c.clientId,
@@ -71,8 +71,7 @@ func (c CognitoService) SignUpCognito(ctx context.Context, username string, pass
 	})
 
 	if err != nil {
-		cognitoError := parseCognitoError(err)
-		return nil, errors.New(cognitoError.Message)
+		return nil, parseCognitoError(err)
 	}
 
 	return output.UserSub, nil
@@ -120,6 +119,7 @@ func parseCognitoError(err error) *appErrors.AppError {
 	var tooManyRequestsErr *types.TooManyRequestsException
 	var invalidPasswordErr *types.InvalidPasswordException
 	var userNotConfirmedErr *types.UserNotConfirmedException
+	var usernameExistsErr *types.UsernameExistsException
 	var resetRequired *types.PasswordResetRequiredException
 	var tokenExpired *types.ExpiredCodeException
 
@@ -160,10 +160,16 @@ func parseCognitoError(err error) *appErrors.AppError {
 			"Token Access has expired",
 			http.StatusBadRequest,
 		)
+	case errors.As(err, &usernameExistsErr):
+		return appErrors.NewAppError(
+			"UsernameExistsException",
+			"User with this username or email already exists",
+			http.StatusBadRequest,
+		)
 	default:
 		return appErrors.NewAppError(
 			"UnknownError",
-			"An unexpected error occurred",
+			err.Error(),
 			http.StatusInternalServerError,
 		)
 	}
