@@ -5,10 +5,10 @@ import (
 	"net/http"
 	"os"
 
+	authRouter "github.com/bartholomeas/hwheels_api/api/auth/router"
+	catalogRouter "github.com/bartholomeas/hwheels_api/api/catalog/router"
+	userRouter "github.com/bartholomeas/hwheels_api/api/user/router"
 	"github.com/bartholomeas/hwheels_api/config/initializers"
-	authRouter "github.com/bartholomeas/hwheels_api/internal/auth/router"
-	catalogRouter "github.com/bartholomeas/hwheels_api/internal/catalog/router"
-	userRouter "github.com/bartholomeas/hwheels_api/internal/user/router"
 	"github.com/gin-gonic/gin"
 )
 

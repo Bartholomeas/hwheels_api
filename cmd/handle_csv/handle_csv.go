@@ -7,9 +7,9 @@ import (
 	"os"
 	"time"
 
+	catalogEntities "github.com/bartholomeas/hwheels_api/api/catalog/entities"
+	"github.com/bartholomeas/hwheels_api/api/catalog/models"
 	"github.com/bartholomeas/hwheels_api/config/initializers"
-	catalogEntities "github.com/bartholomeas/hwheels_api/internal/catalog/entities"
-	"github.com/bartholomeas/hwheels_api/internal/catalog/models"
 	"github.com/gosimple/slug"
 )
 

@@ -3,10 +3,10 @@ package main
 import (
 	"log"
 
+	authEntities "github.com/bartholomeas/hwheels_api/api/auth/entities"
+	catalogEntities "github.com/bartholomeas/hwheels_api/api/catalog/entities"
+	userEntities "github.com/bartholomeas/hwheels_api/api/user/entities"
 	"github.com/bartholomeas/hwheels_api/config/initializers"
-	authEntities "github.com/bartholomeas/hwheels_api/internal/auth/entities"
-	catalogEntities "github.com/bartholomeas/hwheels_api/internal/catalog/entities"
-	userEntities "github.com/bartholomeas/hwheels_api/internal/user/entities"
 )
 
 func init() {
