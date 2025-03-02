@@ -19,9 +19,9 @@ func main() {
 
 	if err := initializers.DB.Migrator().DropTable(
 		"catalog_item_categories",
-		&catalogEntities.CatalogItemDetails{},
-		&catalogEntities.CatalogItem{},
-		&catalogEntities.CatalogCategory{},
+		// &catalogEntities.CatalogItemDetails{},
+		// &catalogEntities.CatalogItem{},
+		// &catalogEntities.CatalogCategory{},
 		&userEntities.UserProfile{},
 		&authEntities.User{},
 	); err != nil {

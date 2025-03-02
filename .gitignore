@@ -3,6 +3,8 @@
 data
 csv/*
 
-tmp/
+tmp
+/tmp
 tmp/*
+tmp/**
 tmp/**/*
