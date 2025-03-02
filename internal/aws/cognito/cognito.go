@@ -7,18 +7,20 @@ import (
 	"encoding/base64"
 	"errors"
 	"log"
+	"net/http"
 	"os"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	cognito "github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
+	appErrors "github.com/bartholomeas/hwheels_api/internal/common/app_errors"
 )
 
 type CognitoInterface interface {
-	SignUpCognito(ctx context.Context, username string, password string, email string) (bool, error)
-	SignInCognito(ctx context.Context, username string, password string) (*types.AuthenticationResultType, error)
-	GetUserByToken(token string) (*cognito.GetUserOutput, error)
+	SignUpCognito(ctx context.Context, username string, password string, email string) (*string, error)
+	SignInCognito(ctx context.Context, username string, password string) (*types.AuthenticationResultType, *appErrors.AppError)
+	GetUserByToken(token string) (*cognito.GetUserOutput, *appErrors.AppError)
 }
 
 type CognitoService struct {
@@ -44,15 +46,7 @@ func NewCognitoService() *CognitoService {
 	}
 }
 
-func calculateSecretHash(username, clientId, clientSecret string) string {
-	mac := hmac.New(sha256.New, []byte(clientSecret))
-	mac.Write([]byte(username + clientId))
-	return base64.StdEncoding.EncodeToString(mac.Sum(nil))
-}
-
-func (c CognitoService) SignUpCognito(ctx context.Context, username string, password string, email string) (bool, error) {
-	confirmed := false
-
+func (c CognitoService) SignUpCognito(ctx context.Context, username string, password string, email string) (*string, error) {
 	secretHash := calculateSecretHash(
 		email,
 		c.clientId,
@@ -75,22 +69,16 @@ func (c CognitoService) SignUpCognito(ctx context.Context, username string, pass
 			},
 		},
 	})
-	if err != nil {
-		var invalidPassword *types.InvalidPasswordException
-		if errors.As(err, &invalidPassword) {
-			log.Println(*invalidPassword.Message)
-		} else {
-			log.Printf("Couldn't sign up user %v. Here's why: %v\n", username, err)
-		}
 
-	} else {
-		confirmed = output.UserConfirmed
+	if err != nil {
+		cognitoError := parseCognitoError(err)
+		return nil, errors.New(cognitoError.Message)
 	}
 
-	return confirmed, nil
+	return output.UserSub, nil
 }
 
-func (c CognitoService) SignInCognito(ctx context.Context, username string, password string) (*types.AuthenticationResultType, error) {
+func (c CognitoService) SignInCognito(ctx context.Context, username string, password string) (*types.AuthenticationResultType, *appErrors.AppError) {
 	var authResult *types.AuthenticationResultType
 
 	secretHash := calculateSecretHash(
@@ -106,28 +94,84 @@ func (c CognitoService) SignInCognito(ctx context.Context, username string, pass
 	})
 
 	if err != nil {
-		var resetRequired *types.PasswordResetRequiredException
-		if errors.As(err, &resetRequired) {
-			log.Println(*resetRequired.Message)
-		} else {
-			log.Printf("Couldn't sign in user %v. Here's why: %v\n", username, err)
-		}
+		return nil, parseCognitoError(err)
 	} else {
 		authResult = result.AuthenticationResult
 	}
 
-	return authResult, err
+	return authResult, nil
 }
 
-func (c CognitoService) GetUserByToken(token string) (*cognito.GetUserOutput, error) {
+func (c CognitoService) GetUserByToken(token string) (*cognito.GetUserOutput, *appErrors.AppError) {
 	input := &cognito.GetUserInput{
 		AccessToken: aws.String(token),
 	}
 
 	result, err := c.cognitoClient.GetUser(context.Background(), input)
 	if err != nil {
-		return nil, err
+		return nil, parseCognitoError(err)
 	}
 
 	return result, nil
+}
+
+func parseCognitoError(err error) *appErrors.AppError {
+	var notAuthAerr *types.NotAuthorizedException
+	var tooManyRequestsErr *types.TooManyRequestsException
+	var invalidPasswordErr *types.InvalidPasswordException
+	var userNotConfirmedErr *types.UserNotConfirmedException
+	var resetRequired *types.PasswordResetRequiredException
+	var tokenExpired *types.ExpiredCodeException
+
+	switch {
+	case errors.As(err, &notAuthAerr):
+		return appErrors.NewAppError(
+			"NotAuthorizedException",
+			"Invalid username or password",
+			http.StatusUnauthorized,
+		)
+	case errors.As(err, &userNotConfirmedErr):
+		return appErrors.NewAppError(
+			"UserNotConfirmedException",
+			"User not confirmed",
+			http.StatusBadRequest,
+		)
+	case errors.As(err, &tooManyRequestsErr):
+		return appErrors.NewAppError(
+			"TooManyRequestsException",
+			"Too many requests",
+			http.StatusTooManyRequests,
+		)
+	case errors.As(err, &invalidPasswordErr):
+		return appErrors.NewAppError(
+			"InvalidPasswordException",
+			"Invalid password",
+			http.StatusBadRequest,
+		)
+	case errors.As(err, &resetRequired):
+		return appErrors.NewAppError(
+			"PasswordResetRequiredException",
+			"Password reset required",
+			http.StatusBadRequest,
+		)
+	case errors.As(err, &tokenExpired):
+		return appErrors.NewAppError(
+			"ExpiredCodeException",
+			"Token Access has expired",
+			http.StatusBadRequest,
+		)
+	default:
+		return appErrors.NewAppError(
+			"UnknownError",
+			"An unexpected error occurred",
+			http.StatusInternalServerError,
+		)
+	}
+
+}
+
+func calculateSecretHash(username, clientId, clientSecret string) string {
+	mac := hmac.New(sha256.New, []byte(clientSecret))
+	mac.Write([]byte(username + clientId))
+	return base64.StdEncoding.EncodeToString(mac.Sum(nil))
 }
