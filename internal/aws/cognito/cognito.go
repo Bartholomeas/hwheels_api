@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -107,6 +108,7 @@ func (c CognitoService) GetUserByToken(token string) (*cognito.GetUserOutput, *a
 	}
 
 	result, err := c.cognitoClient.GetUser(context.Background(), input)
+
 	if err != nil {
 		return nil, parseCognitoError(err)
 	}
@@ -127,43 +129,43 @@ func parseCognitoError(err error) *appErrors.AppError {
 	case errors.As(err, &notAuthAerr):
 		return appErrors.NewAppError(
 			"NotAuthorizedException",
-			"Invalid username or password",
+			strings.Split(err.Error(), "NotAuthorizedException: ")[1],
 			http.StatusUnauthorized,
 		)
 	case errors.As(err, &userNotConfirmedErr):
 		return appErrors.NewAppError(
 			"UserNotConfirmedException",
-			"User not confirmed",
+			strings.Split(err.Error(), "UserNotConfirmedException: ")[1],
 			http.StatusBadRequest,
 		)
 	case errors.As(err, &tooManyRequestsErr):
 		return appErrors.NewAppError(
 			"TooManyRequestsException",
-			"Too many requests",
+			strings.Split(err.Error(), "TooManyRequestsException: ")[1],
 			http.StatusTooManyRequests,
 		)
 	case errors.As(err, &invalidPasswordErr):
 		return appErrors.NewAppError(
 			"InvalidPasswordException",
-			"Invalid password",
+			strings.Split(err.Error(), "InvalidPasswordException: ")[1],
 			http.StatusBadRequest,
 		)
 	case errors.As(err, &resetRequired):
 		return appErrors.NewAppError(
 			"PasswordResetRequiredException",
-			"Password reset required",
+			strings.Split(err.Error(), "PasswordResetRequiredException: ")[1],
 			http.StatusBadRequest,
 		)
 	case errors.As(err, &tokenExpired):
 		return appErrors.NewAppError(
 			"ExpiredCodeException",
-			"Token Access has expired",
+			strings.Split(err.Error(), "ExpiredCodeException: ")[1],
 			http.StatusBadRequest,
 		)
 	case errors.As(err, &usernameExistsErr):
 		return appErrors.NewAppError(
 			"UsernameExistsException",
-			"User with this username or email already exists",
+			strings.Split(err.Error(), "UsernameExistsException: ")[1],
 			http.StatusBadRequest,
 		)
 	default:
